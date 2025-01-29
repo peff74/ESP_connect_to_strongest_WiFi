@@ -1,6 +1,6 @@
 # ESP8266 / ESP32 connect to the strongest WiFi  Script
 
-This lightweight Arduino script helps your ESP8266 automatically connect to the strongest available WiFi and seamlessly handle reconnections when needed.
+This lightweight Arduino script helps your ESP automatically connect to the strongest available WiFi and seamlessly handle reconnections when needed.
 
 ## Features
 
