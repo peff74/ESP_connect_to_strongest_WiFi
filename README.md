@@ -26,6 +26,57 @@ This lightweight Arduino script helps your ESP automatically connect to the stro
 - Periodically logs **WiFi state, signal strength, and IP address**.
 - Helps with **debugging and monitoring**.
 
+```
+Start scanning for SSID Test
+Scanning WiFi......
+15 networks found:
+0: BSSID: 00:11:6B:74:94:61  -77dBm,  46%  encrypted  Test
+1: BSSID: 80:1F:02:AE:43:D8  -93dBm,  14%  encrypted  Test
+2: BSSID: 80:1F:02:AE:41:48  -78dBm,  44%  encrypted  Test
+3: BSSID: 80:1F:02:36:31:98  -80dBm,  40%  encrypted  Test
+4: BSSID: 9C:A2:F4:63:65:60  -45dBm, 100%  encrypted  PG-WLAN
+5: BSSID: 06:0B:BD:5A:DB:5D  -17dBm, 100%  encrypted  Test
+6: BSSID: 00:11:6B:74:94:2B  -91dBm,  18%  encrypted  Test
+7: BSSID: 80:1F:02:36:3A:98  -63dBm,  74%  encrypted  Test
+8: BSSID: 00:11:6B:74:94:79  -82dBm,  36%  encrypted  der-hotspot
+9: BSSID: 80:1F:02:36:31:C8  -71dBm,  58%  encrypted  Test
+10: BSSID: 32:E5:EE:AD:C4:E4  -88dBm,  24%  encrypted  AndroidAP
+11: BSSID: 80:1F:02:36:39:E0  -86dBm,  28%  encrypted  Test
+12: BSSID: 80:1F:02:AE:41:30  -80dBm,  40%  encrypted  Test
+13: BSSID: 80:1F:02:AE:43:F0  -81dBm,  38%  encrypted  Test
+14: BSSID: 00:11:6B:74:94:55  -80dBm,  40%  encrypted  Test
+Connecting to strongest WiFi signal at No. 5. 
+Connecting WiFi....................................WiFi Connected
+.192.168.206.105
+WiFiconnected: 1 
+WiFi-OFF: 0 
+WiFi-OFF_count: 0 
+WiFi-Connecting_count: 0 
+Local IP:  192.168.206.105 
+WiFi-RSSI:  -22 
+Measurement_count: 59 
+Unix-Time: 6 
+___________________________
+WiFiconnected: 1 
+WiFi-OFF: 0 
+WiFi-OFF_count: 0 
+WiFi-Connecting_count: 0 
+Local IP:  192.168.206.105 
+WiFi-RSSI:  -24 
+Measurement_count: 58 
+Unix-Time: 1738189502 
+___________________________
+WiFiconnected: 1 
+WiFi-OFF: 0 
+WiFi-OFF_count: 0 
+WiFi-Connecting_count: 0 
+Local IP:  192.168.206.105 
+WiFi-RSSI:  -23 
+Measurement_count: 57 
+Unix-Time: 1738189503 
+___________________________
+```
+
 - **Hardware:** ESP8266 /ESP32
 - **Libraries:**
   - `WiFi.h` for ESP32
