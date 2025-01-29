@@ -1,6 +1,6 @@
 # ESP8266 connect to the strongest WiFi  Script
 
-This is a WiFi management and OTA update script for the ESP8266 microcontroller.
+This lightweight Arduino script helps your ESP8266 automatically connect to the strongest available WiFi and seamlessly handle reconnections when needed.
 
 ## Features
 
