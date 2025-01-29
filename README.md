@@ -28,7 +28,7 @@ This lightweight Arduino script helps your ESP automatically connect to the stro
 
 - **Hardware:** ESP8266 /ESP32
 - **Libraries:**
-  - WiFi.h for ESP32
+  - `WiFi.h` for ESP32
   - `ArduinoOTA.h`
   - `time.h`
 
