@@ -16,7 +16,7 @@ This lightweight Arduino script helps your ESP automatically connect to the stro
 
 1. The ESP **scans for available networks**.
 2. It selects the strongest **RSSI (signal strength)** for the given SSID.
-3. If no network is found, it restarts after a timeout.
+3. If no network is found at startup, it restarts after a timeout.
 4. If the connection is lost, it **tries to reconnect** within a retry window.
 5. If repeated attempts fail, WiFi is temporarily disabled before retrying later.
 
