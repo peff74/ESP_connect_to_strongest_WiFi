@@ -194,11 +194,6 @@ ___________________________
 ```
 </details>
 
-- **Hardware:** ESP8266 /ESP32
-- **Libraries:**
-  - `WiFi.h` for ESP32
-  - `ArduinoOTA.h`
-  - `time.h`
 
 ## How to Use
 
