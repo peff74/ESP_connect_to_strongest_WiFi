@@ -118,14 +118,39 @@ void handelWiFi() {
 ```
 
 </details>
-4.  It uses **asynchronous callbacks (WiFi.onEvent)** that work **non-blocking** to improve efficiency.
+
+4.  It uses **asynchronous callbacks (WiFi.onEvent/WiFiEventHandler** that work **non-blocking** to improve efficiency.
 <details>
-<summary>📝 code</summary>
+<summary>📝 ESP32 code</summary>
 
 ```
 WiFi.onEvent(onWifiConnect, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
 // WiFi.onEvent(onWifiDisconnect, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED); /does not work propper with ESP32
 WiFi.onEvent(onWifiScandone, WiFiEvent_t::ARDUINO_EVENT_WIFI_SCAN_DONE);
+```
+
+</details>
+
+<details>
+<summary>📝 ESP8266 code</summary>
+
+```
+WiFiEventHandler wifiConnectHandler;
+WiFiEventHandler wifiDisconnectHandler;
+.
+.
+.
+wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
+wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
+.
+.
+.
+void onWifiConnect(const WiFiEventStationModeGotIP& event) {
+  }
+
+void onWifiDisconnect(const WiFiEventStationModeDisconnected& event) {
+ }
+
 ```
 
 </details>
