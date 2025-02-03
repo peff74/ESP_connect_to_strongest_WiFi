@@ -10,7 +10,6 @@ This lightweight Arduino script helps your ESP automatically connect to the stro
 - **Non-blocking WiFi management** to ensure smooth operation.
 - **Dynamic Reconnect Handling**: If the connection drops, it intelligently attempts to reconnect.
 - **Power-Saving Mechanism / wifi pollution stopping**: WiFi is temporarily disabled if no connection is possible.
-- **OTA-OverTheAir**: as example to use WiFi
 - **Simple and clearly written** so that even beginners (like me) can understand how it works.
 
 ## How it Works
