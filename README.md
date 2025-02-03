@@ -1,4 +1,6 @@
 # ESP8266 / ESP32 connect to the strongest WiFi  Script
+![ESP Boards](https://img.shields.io/badge/Supports-ESP32%20%7C%20ESP8266-green) 
+
 
 This lightweight Arduino script helps your ESP automatically connect to the strongest available WiFi and seamlessly handle reconnections when needed.
 
@@ -8,6 +10,7 @@ This lightweight Arduino script helps your ESP automatically connect to the stro
 - **Non-blocking WiFi management** to ensure smooth operation.
 - **Dynamic Reconnect Handling**: If the connection drops, it intelligently attempts to reconnect.
 - **Power-Saving Mechanism / wifi pollution stopping**: WiFi is temporarily disabled if no connection is possible.
+- **OTA-OverTheAir**: as example to use WiFi
 - **Simple and clearly written** so that even beginners (like me) can understand how it works.
 
 ## How it Works
@@ -15,16 +18,129 @@ This lightweight Arduino script helps your ESP automatically connect to the stro
 ### WiFi Connection
 
 1. The ESP **scans for available networks**.
-2. It selects the strongest **RSSI (signal strength)** for the given SSID.
-3. If no network is found at startup, it restarts after a timeout.
-4. If the connection is lost, it **tries to reconnect** within a retry window.
-5. If repeated attempts fail, WiFi is temporarily disabled before retrying later.
+<details>
+<summary>📝 code</summary>
+   
+```
+void scanWiFiNetwork() {
+  Serial.println(F(""));
+  Serial.printf("Start scanning for SSID %s\n", WIFI_SSID);
+  WiFi.scanNetworks(true);  // WiFi.scanNetworks will return the number of networks found
+}
+```
+
+</details>
+
+   
+2. It will then select the strongest **RSSI (signal strength)** for the given SSID and connetet to it
+<details>
+<summary>📝 code</summary>
+   
+```
+void connectToStrongestWiFi() {
+  int i_strongest = -1;
+  int32_t rssi_strongest = -100;
+  int16_t WiFiScanResult = WiFi.scanComplete();
+  Serial.println(F(""));
+  if (WiFiScanResult < 0) {
+    Serial.println(F("No networks found!"));
+  } else {
+    Serial.printf("%d networks found:\n", WiFiScanResult);
+    for (int i = 0; i < WiFiScanResult; ++i) {
+      Serial.printf("%d: BSSID: %s  %2ddBm, %3d%%  %9s  %s\n",
+                    i,
+                    WiFi.BSSIDstr(i).c_str(),
+                    WiFi.RSSI(i),
+                    constrain(2 * (WiFi.RSSI(i) + 100), 0, 100),
+                    (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? "open" : "encrypted",
+                    WiFi.SSID(i).c_str());
+      if (strcmp(WIFI_SSID, WiFi.SSID(i).c_str()) == 0 && (WiFi.RSSI(i)) > rssi_strongest) {
+        rssi_strongest = WiFi.RSSI(i);
+        i_strongest = i;
+      }
+    }
+  }
+
+  if (i_strongest > -1) {
+    Serial.printf("Connecting to strongest WiFi signal at No. %d. \n", i_strongest);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD, 0, WiFi.BSSID(i_strongest));
+  } else {
+    Serial.printf("No network with SSID %s found!\n", WIFI_SSID);
+  }
+}
+```
+
+</details>
+
+3. If the connection is lost, it **switches off the WiFi temporarily** and **tries to reconnect** within a retry window.
+<details>
+<summary>📝 code</summary>
+   
+```
+void handelWiFi() {
+  if (WiFiconnected && WiFi.localIP() == IPAddress(0, 0, 0, 0)) {
+    WiFiconnected = false;
+    Serial.println(F("............................WiFi Disconnected"));
+  }
+
+
+  if (!WiFiconnected && !WiFiOff && WiFiconnecting_count == 0) {
+    Serial.println(F("Switching WiFi Off, no WiFi available"));
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+    delay(1);
+    WiFiOff = true;
+    WiFiOff_count = WIFIOFF_COUNT_VALUE;
+  }
+
+  if (WiFiOff) {
+    --WiFiOff_count;
+  }
+
+  if (WiFiOff && WiFiOff_count == 0) {
+    Serial.println(F("Try to reconnect"));
+    WiFi.mode(WIFI_STA);
+    scanWiFiNetwork();
+    WiFiOff = false;
+    WiFiconnecting_count = WIFICONNECTING_COUNT_VALUE;
+  }
+
+  if (WiFiscandone) {  // WiFiscandone kommt über WiFiEvent
+    connectToStrongestWiFi();
+    WiFi.scanDelete();
+    WiFiscandone = false;
+  }
+
+  if (!WiFiconnected && WiFiconnecting_count > 0) {
+    --WiFiconnecting_count;
+  }
+}
+```
+
+</details>
+4.  It uses **asynchronous callbacks (WiFi.onEvent)** that work **non-blocking** to improve efficiency.
+<details>
+<summary>📝 code</summary>
+
+```
+WiFi.onEvent(onWifiConnect, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
+// WiFi.onEvent(onWifiDisconnect, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED); /does not work propper with ESP32
+WiFi.onEvent(onWifiScandone, WiFiEvent_t::ARDUINO_EVENT_WIFI_SCAN_DONE);
+```
+
+</details>
+ 
+
+
 
    
 ### Heartbeat Monitoring
 
 - Periodically logs **WiFi state, signal strength, and IP address**.
 - Helps with **debugging and monitoring**.
+- Easy to **integrate custom functions**.
+<details>
+<summary>📝 example</summary>
 
 ```
 Start scanning for SSID Test
@@ -76,6 +192,7 @@ Measurement_count: 57
 Unix-Time: 1738189503 
 ___________________________
 ```
+</details>
 
 - **Hardware:** ESP8266 /ESP32
 - **Libraries:**
@@ -85,7 +202,26 @@ ___________________________
 
 ## How to Use
 
-1. Change `WIFI_SSID` and `WIFI_PASSWORD`.
+1. Just change the "defines" from one of the scripts to suit your needs.
+<details>
+<summary>📝 code</summary>
+   
+```
+//=======Defines
+
+#define WIFI_SSID "Test"
+#define WIFI_PASSWORD "Password1"
+#define WIFIOFF_COUNT_VALUE 90         // Counter for how long WiFi remains off before attempting a reconnection
+#define WIFICONNECTING_COUNT_VALUE 10  // Counter for how long WiFi should attempt to connect before being disabled again
+#define OTAHOSTNAME "ESP32-WiFi"
+#define WiFiHOSTNAME "Test-ESP32"
+
+#define MEASUREMENT_COUNT_VALUE 60    // Multiplier for Heartbeat
+#define HEARTBEATINTERVAL_VALUE 1000  // Milliseconds for a Heartbeat
+```
+
+</details>
+
 2. Flash the script to an ESP8266 / ESP32 device.
 
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fpeff74%2FESP_connect_to_strongest_WiFi%2F&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
