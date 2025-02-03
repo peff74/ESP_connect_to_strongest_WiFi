@@ -196,7 +196,6 @@ WiFi-Connecting_count: 0
 Local IP:  192.168.206.105 
 WiFi-RSSI:  -22 
 Measurement_count: 59 
-Unix-Time: 6 
 ___________________________
 WiFiconnected: 1 
 WiFi-OFF: 0 
@@ -205,7 +204,6 @@ WiFi-Connecting_count: 0
 Local IP:  192.168.206.105 
 WiFi-RSSI:  -24 
 Measurement_count: 58 
-Unix-Time: 1738189502 
 ___________________________
 WiFiconnected: 1 
 WiFi-OFF: 0 
@@ -214,7 +212,6 @@ WiFi-Connecting_count: 0
 Local IP:  192.168.206.105 
 WiFi-RSSI:  -23 
 Measurement_count: 57 
-Unix-Time: 1738189503 
 ___________________________
 ```
 </details>
