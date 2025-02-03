@@ -1,80 +1,43 @@
-
 //IDE 2.3.3 - - esp8266 3.1.2
-#include <ArduinoOTA.h>
-#include <time.h>
+#include <ESP8266WiFi.h>
+
 
 //=======Defines
 
-#define WIFI_SSID "Test"          
-#define WIFI_PASSWORD "Password1"  
-#define WIFIOFF_COUNT_VALUE 90         //Counter wie lang WiFi ausgeschaltet bleibt bis ein neuer Verbindungsversuch gestartet wird
-#define WIFICONNECTING_COUNT_VALUE 10  //Counter wie lange WiFi versucht werden soll zu erreichen, bis erneut deaktiviert wird
-#define OTAHOSTNAME "ESP8266-WiFi"
+#define WIFI_SSID "Test"
+#define WIFI_PASSWORD "Password1"
+
 #define WiFiHOSTNAME "Test-ESP8266"
 
-#define MEASUREMENT_COUNT_VALUE 60    // multiplikator von Heartbeat
-#define HEARTBEATINTERVAL_VALUE 1000  // MilliSekunden für einen Heartbeat
+#define WIFIOFF_COUNT_VALUE 90         // Counter for how long WiFi remains off before attempting a reconnection
+#define WIFICONNECTING_COUNT_VALUE 10  // Counter for how long WiFi should attempt to connect before being disabled again
 
+#define HEARTBEAT_COUNT_VALUE 60      // Multiplier for Heartbeat
+#define HEARTBEATINTERVAL_VALUE 1000  // Milliseconds for a Heartbeat
 
 
 //=======SETTINGS
 
 
-//Timer für Heartbeat 1 sec.
-unsigned long HeartbeatMillis = 0;                       // will store last time Heartbeat was running
-const long Heartbeatinterval = HEARTBEATINTERVAL_VALUE;  // interval at which to send (milliseconds)
-int Measurement_count = MEASUREMENT_COUNT_VALUE;
+// Timer for Heartbeat 1 sec.
+unsigned long HeartbeatMillis = 0;                       // Stores the last time the Heartbeat was running
+const long Heartbeatinterval = HEARTBEATINTERVAL_VALUE;  // Interval at which to send (milliseconds)
+int Heartbeat_count = HEARTBEAT_COUNT_VALUE;
 
 
-
-//WiFi reconnecting
+// WiFi reconnecting
 WiFiEventHandler wifiConnectHandler;
 WiFiEventHandler wifiDisconnectHandler;
-bool WiFiscandone = false;                              // Schalter für Wifi scan
-int WiFiconnecting_count = WIFICONNECTING_COUNT_VALUE;  // Counter für WiFi connection
-bool WiFiconnected = false;                             // Schalter für Wifi verbunden
-bool WiFiOff = false;                                   // Schalter für Wifi OFF
-int WiFiOff_count = WIFIOFF_COUNT_VALUE;                // Counter wie lange WiFi Off bleiben soll
+bool WiFiscandone = false;                              // Flag for WiFi scan
+bool WiFiconnected = false;                             // Flag for WiFi connected
+bool WiFiOff = false;                                   // Flag for WiFi OFF
+int WiFiOff_count = WIFIOFF_COUNT_VALUE;                // Counter for how long WiFi should remain off
+int WiFiconnecting_count = WIFICONNECTING_COUNT_VALUE;  // Counter for WiFi connection
 
 
-
-
-//Printbuffers
+// Print buffers
 char printbuffer0[400];  // NFO
 char printbuffer[70];    // Loop
-
-
-
-/*
-  OTA Upload via ArduinoIDE
-*/
-
-void ideOTASetup() {
-  ArduinoOTA.setHostname(OTAHOSTNAME);
-  ArduinoOTA.onStart([]() {
-    Serial.println("[otaide] OTA started");
-  });
-  ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd");
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
-  });
-  ArduinoOTA.begin();
-}
-
-/*
-  End off OTA Upload via ArduinoIDE
-*/
 
 
 /*
@@ -92,7 +55,6 @@ void onWifiDisconnect(const WiFiEventStationModeDisconnected& event) {
   WiFiconnected = false;
   Serial.println(F("............................WiFi Disconnected"));
 }
-
 
 
 void WiFisetup() {
@@ -133,12 +95,13 @@ void WiFistartup() {
   WiFiscandone = false;
 }
 
-
 void scanWiFiNetwork() {
   Serial.println(F(""));
   Serial.printf("Start scanning for SSID %s\n", WIFI_SSID);
-  WiFi.scanNetworks(true);  // WiFi.scanNetworks will return the number of networks found
+  WiFi.scanNetworks(true);  // Initiates an asynchronous scan for available WiFi networks
 }
+
+
 
 
 void connectToStrongestWiFi() {
@@ -158,6 +121,7 @@ void connectToStrongestWiFi() {
                     constrain(2 * (WiFi.RSSI(i) + 100), 0, 100),
                     (WiFi.encryptionType(i) == AUTH_OPEN) ? "open" : "encrypted",
                     WiFi.SSID(i).c_str());
+      // Select the strongest network with the correct SSID
       if (strcmp(WIFI_SSID, WiFi.SSID(i).c_str()) == 0 && (WiFi.RSSI(i)) > rssi_strongest) {
         rssi_strongest = WiFi.RSSI(i);
         i_strongest = i;
@@ -165,6 +129,7 @@ void connectToStrongestWiFi() {
     }
   }
 
+  // Attempt connection to the strongest found network
   if (i_strongest > -1) {
     Serial.printf("Connecting to strongest WiFi signal at No. %d. \n", i_strongest);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD, 0, WiFi.BSSID(i_strongest));
@@ -172,7 +137,6 @@ void connectToStrongestWiFi() {
     Serial.printf("No network with SSID %s found!\n", WIFI_SSID);
   }
 }
-
 
 void handelWiFi() {
   if (WiFi.scanComplete() > -1) {
@@ -216,14 +180,12 @@ void handelWiFi() {
 */
 
 
-
 //============SETUP
 
 void setup() {
   Serial.begin(115200);
   WiFisetup();
   WiFistartup();
-  configTime(0, 0, "pool.ntp.org");
 }
 
 //============LOOP
@@ -231,7 +193,7 @@ void setup() {
 void loop() {
 
   if (WiFiconnected) {
-    ArduinoOTA.handle();
+    // code that need WiFi
   }
 
   //===========Heartbeat
@@ -239,11 +201,9 @@ void loop() {
 
   if (currentMillis - HeartbeatMillis >= Heartbeatinterval) {
     HeartbeatMillis = currentMillis;
-    --Measurement_count;
+    --HEARTBEAT_COUNT;
     handelWiFi();
 
-    time_t now;
-    time(&now);
     char ipBuffer[16];
     WiFi.localIP().toString().toCharArray(ipBuffer, sizeof(ipBuffer));
     snprintf(printbuffer0, sizeof(printbuffer0),
@@ -253,17 +213,16 @@ void loop() {
              "WiFi-Connecting_count: %i \n"
              "Local IP:  %s \n"
              "WiFi-RSSI:  %d \n"
-             "Measurement_count: %i \n"
-             "Unix-Time: %lld \n"
+             "HEARTBEAT_COUNT: %i \n"
              "___________________________",
              WiFiconnected, WiFiOff, WiFiOff_count,
              WiFiconnecting_count, ipBuffer, WiFi.RSSI(),
-             Measurement_count, now);
+             HEARTBEAT_COUNT);
     Serial.println(printbuffer0);
 
 
-    if (Measurement_count == 0) {
-      Measurement_count = MEASUREMENT_COUNT_VALUE;
+    if (Heartbeat_count == 0) {
+      Heartbeat_count = HEARTBEAT_COUNT_VALUE;
     }
   }
 }

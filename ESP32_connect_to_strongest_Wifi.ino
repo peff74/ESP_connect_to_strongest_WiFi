@@ -1,18 +1,17 @@
 //IDE 2.3.3 - - esp32 3.1.1
 #include <WiFi.h>
-#include <ArduinoOTA.h>
-#include <time.h>
 
 //=======Defines
 
 #define WIFI_SSID "Test"
 #define WIFI_PASSWORD "Password1"
-#define WIFIOFF_COUNT_VALUE 90         // Counter for how long WiFi remains off before attempting a reconnection
-#define WIFICONNECTING_COUNT_VALUE 10  // Counter for how long WiFi should attempt to connect before being disabled again
-#define OTAHOSTNAME "ESP32-WiFi"
+
 #define WiFiHOSTNAME "Test-ESP32"
 
-#define MEASUREMENT_COUNT_VALUE 60    // Multiplier for Heartbeat
+#define WIFIOFF_COUNT_VALUE 90         // Counter for how long WiFi remains off before attempting a reconnection
+#define WIFICONNECTING_COUNT_VALUE 10  // Counter for how long WiFi should attempt to connect before being disabled again
+
+#define HEARTBEAT_COUNT_VALUE 60    // Multiplier for Heartbeat
 #define HEARTBEATINTERVAL_VALUE 1000  // Milliseconds for a Heartbeat
 
 
@@ -22,7 +21,7 @@
 // Timer for Heartbeat 1 sec.
 unsigned long HeartbeatMillis = 0;                       // Stores the last time the Heartbeat was running
 const long Heartbeatinterval = HEARTBEATINTERVAL_VALUE;  // Interval at which to send (milliseconds)
-int Measurement_count = MEASUREMENT_COUNT_VALUE;
+int Heartbeat_count = HEARTBEAT_COUNT_VALUE;
 
 
 // WiFi reconnecting
@@ -37,37 +36,6 @@ int WiFiconnecting_count = WIFICONNECTING_COUNT_VALUE;  // Counter for WiFi conn
 char printbuffer0[400];  // NFO
 char printbuffer[70];    // Loop
 
-
-/*
-  OTA Upload via ArduinoIDE
-*/
-
-void ideOTASetup() {
-  ArduinoOTA.setHostname(OTAHOSTNAME);
-  ArduinoOTA.onStart([]() {
-    Serial.println("[otaide] OTA started");
-  });
-  ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd");
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
-  });
-  ArduinoOTA.begin();
-}
-
-/*
-  End of OTA Upload via ArduinoIDE
-*/
 
 
 /*
@@ -219,8 +187,6 @@ void setup() {
   Serial.begin(115200);
   WiFisetup();
   WiFistartup();
-  ideOTASetup();
-  configTime(0, 0, "pool.ntp.org");
 }
 
 //============LOOP
@@ -228,7 +194,7 @@ void setup() {
 void loop() {
 
   if (WiFiconnected) {
-    ArduinoOTA.handle();
+       // code that need WiFi
   }
 
   //===========Heartbeat
@@ -236,11 +202,10 @@ void loop() {
 
   if (currentMillis - HeartbeatMillis >= Heartbeatinterval) {
     HeartbeatMillis = currentMillis;
-    --Measurement_count;
+    --HEARTBEAT_COUNT;
+
     handelWiFi();
 
-    time_t now;
-    time(&now);
     char ipBuffer[16];
     WiFi.localIP().toString().toCharArray(ipBuffer, sizeof(ipBuffer));
     snprintf(printbuffer0, sizeof(printbuffer0),
@@ -250,17 +215,16 @@ void loop() {
              "WiFi-Connecting_count: %i \n"
              "Local IP:  %s \n"
              "WiFi-RSSI:  %d \n"
-             "Measurement_count: %i \n"
-             "Unix-Time: %lld \n"
+             "HEARTBEAT_COUNT: %i \n"
              "___________________________",
              WiFiconnected, WiFiOff, WiFiOff_count,
              WiFiconnecting_count, ipBuffer, WiFi.RSSI(),
-             Measurement_count, now);
+             HEARTBEAT_COUNT);
     Serial.println(printbuffer0);
 
 
-    if (Measurement_count == 0) {
-      Measurement_count = MEASUREMENT_COUNT_VALUE;
+    if (Heartbeat_count == 0) {
+      Heartbeat_count = HEARTBEAT_COUNT_VALUE;
     }
   }
 }
